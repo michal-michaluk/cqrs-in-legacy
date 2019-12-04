@@ -3,40 +3,17 @@ package services.impl;
 import api.AdjustDemandDto;
 import api.LogisticService;
 import api.StockForecastDto;
-import dao.DemandDao;
-import dao.ShortageDao;
-import demands.DemandReadModelUpdater;
-import demands.DemandsQuery;
-import entities.DemandEntity;
-import entities.ManualAdjustmentEntity;
-import entities.ShortageEntity;
-import external.CurrentStock;
-import external.JiraService;
-import external.NotificationsService;
-import external.StockService;
-import production.ProductionOutputsQuery;
-import tools.ShortageFinder;
+import demands.DemandAggregate;
+import demands.DemandRepository;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.util.List;
 
 public class LogisticServiceImpl implements LogisticService {
 
     //Inject all
-    private DemandDao demandDao;
-    private ShortageDao shortageDao;
-    private StockService stockService;
-    private ProductionOutputsQuery productionOutputsQuery;
-    private DemandsQuery demandsQuery;
-    private DemandReadModelUpdater readModelUpdater;
-
-    private NotificationsService notificationService;
-    private JiraService jiraService;
     private Clock clock;
-
-    private int confShortagePredictionDaysAhead;
-    private long confIncreaseQATaskPriorityInDays;
+    private DemandRepository repository;
 
     /**
      * <pre>
@@ -62,17 +39,10 @@ public class LogisticServiceImpl implements LogisticService {
         if (adjustment.getAtDay().isBefore(LocalDate.now(clock))) {
             return; // TODO it is UI issue or reproduced post
         }
-        DemandEntity demand = demandDao.getCurrent(adjustment.getProductRefNo(), adjustment.getAtDay());
+        DemandAggregate object = repository.get(adjustment.getProductRefNo(), adjustment.getAtDay());
 
-        ManualAdjustmentEntity manualAdjustment = new ManualAdjustmentEntity();
-        manualAdjustment.setLevel(adjustment.getLevel());
-        manualAdjustment.setNote(adjustment.getNote());
-        manualAdjustment.setDeliverySchema(adjustment.getDeliverySchema());
-
-        demand.getAdjustment().add(manualAdjustment);
-
-        readModelUpdater.updateReadModel(demand);
-        processShortages(adjustment.getProductRefNo());
+        object.adjustDemand(adjustment);
+        repository.save(object);
     }
 
     /**
@@ -100,30 +70,5 @@ public class LogisticServiceImpl implements LogisticService {
     @Override
     public StockForecastDto getStockForecast(String productRefNo) {
         return new StockForecastDto();
-    }
-
-    private void processShortages(String productRefNo) {
-        LocalDate today = LocalDate.now(clock);
-        CurrentStock stock = stockService.getCurrentStock(productRefNo);
-        List<ShortageEntity> shortages = ShortageFinder.findShortages(
-                today, confShortagePredictionDaysAhead,
-                stock,
-                productionOutputsQuery.readOutputs(productRefNo, today),
-                demandsQuery.readDemands(productRefNo, today)
-        );
-
-        List<ShortageEntity> previous = shortageDao.getForProduct(productRefNo);
-        if (!shortages.isEmpty() && !shortages.equals(previous)) {
-            notificationService.alertPlanner(shortages);
-            if (stock.getLocked() > 0 &&
-                    shortages.get(0).getAtDay()
-                            .isBefore(today.plusDays(confIncreaseQATaskPriorityInDays))) {
-                jiraService.increasePriorityFor(productRefNo);
-            }
-            shortageDao.save(shortages);
-        }
-        if (shortages.isEmpty() && !previous.isEmpty()) {
-            shortageDao.delete(productRefNo);
-        }
     }
 }

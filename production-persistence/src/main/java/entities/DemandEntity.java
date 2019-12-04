@@ -1,8 +1,11 @@
 package entities;
 
+import enums.DeliverySchema;
+
 import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Created by michal on 01.02.2017.
@@ -34,6 +37,26 @@ public class DemandEntity {
 
     public LocalDate getDay() {
         return this.atDay;
+    }
+
+    public long getLevel() {
+        if (adjustment.isEmpty()) {
+            return original.getLevel();
+        } else {
+            return adjustment.get(adjustment.size() - 1).getLevel();
+        }
+    }
+    public DeliverySchema getDeliverySchema(Function<String, DeliverySchema> defaultPolicy) {
+        DeliverySchema deliverySchema;
+        if (adjustment.isEmpty()) {
+            deliverySchema = original.getDeliverySchema();
+        } else {
+            deliverySchema = adjustment.get(adjustment.size() - 1).getDeliverySchema();
+        }
+        if (deliverySchema == null) {
+            return defaultPolicy.apply(productRefNo);
+        }
+        return deliverySchema;
     }
 
     public OriginalDemandEntity getOriginal() {
