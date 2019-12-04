@@ -1,6 +1,5 @@
 package tools;
 
-import entities.DemandEntity;
 import entities.ShortageEntity;
 import enums.DeliverySchema;
 import external.CurrentStock;
@@ -38,12 +37,11 @@ public class ShortageFinder {
      * TODO algorithm is finding wrong shortages, when more productions is planned in a single day
      */
     public static List<ShortageEntity> findShortages(LocalDate today, int daysAhead, CurrentStock stock,
-                                                     ProductionOutputs outputs, List<DemandEntity> demands) {
+                                                     ProductionOutputs outputs, Demands demandsPerDay) {
         List<LocalDate> dates = Stream.iterate(today, date -> date.plusDays(1))
                 .limit(daysAhead)
                 .collect(toList());
 
-        Demands demandsPerDay = new Demands(demands);
         long level = stock.getLevel();
 
         List<ShortageEntity> gap = new LinkedList<>();

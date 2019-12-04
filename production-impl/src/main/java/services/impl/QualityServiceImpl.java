@@ -2,8 +2,8 @@ package services.impl;
 
 import api.QualityService;
 import api.StorageUnit;
-import dao.DemandDao;
 import dao.ShortageDao;
+import demands.DemandsQuery;
 import entities.ShortageEntity;
 import external.CurrentStock;
 import external.JiraService;
@@ -21,8 +21,8 @@ public class QualityServiceImpl implements QualityService {
     //Inject all
     private ShortageDao shortageDao;
     private StockService stockService;
-    private DemandDao demandDao;
     private ProductionOutputsQuery productionOutputsQuery;
+    private DemandsQuery demandsQuery;
 
     private NotificationsService notificationService;
     private JiraService jiraService;
@@ -70,7 +70,7 @@ public class QualityServiceImpl implements QualityService {
                 today, confShortagePredictionDaysAhead,
                 currentStock,
                 productionOutputsQuery.readOutputs(productRefNo, today),
-                demandDao.findFrom(today.atStartOfDay(), productRefNo)
+                demandsQuery.readDemands(productRefNo, today)
         );
 
         List<ShortageEntity> previous = shortageDao.getForProduct(productRefNo);

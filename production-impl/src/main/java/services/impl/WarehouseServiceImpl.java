@@ -3,8 +3,8 @@ package services.impl;
 import api.DeliveryNote;
 import api.StorageUnit;
 import api.WarehouseService;
-import dao.DemandDao;
 import dao.ShortageDao;
+import demands.DemandsQuery;
 import entities.ShortageEntity;
 import external.CurrentStock;
 import external.JiraService;
@@ -22,8 +22,8 @@ public class WarehouseServiceImpl implements WarehouseService {
     //Inject all
     private ShortageDao shortageDao;
     private ProductionOutputsQuery productionOutputsQuery;
+    private DemandsQuery demandsQuery;
     private StockService stockService;
-    private DemandDao demandDao;
 
     private NotificationsService notificationService;
     private JiraService jiraService;
@@ -70,7 +70,7 @@ public class WarehouseServiceImpl implements WarehouseService {
                 today, confShortagePredictionDaysAhead,
                 currentStock,
                 productionOutputsQuery.readOutputs(productRefNo, today),
-                demandDao.findFrom(today.atStartOfDay(), productRefNo)
+                demandsQuery.readDemands(productRefNo, today)
         );
 
         List<ShortageEntity> previous = shortageDao.getForProduct(productRefNo);

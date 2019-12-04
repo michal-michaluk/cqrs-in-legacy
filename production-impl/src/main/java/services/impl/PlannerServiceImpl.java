@@ -3,6 +3,7 @@ package services.impl;
 import api.PlanViewDto;
 import api.PlannerService;
 import dao.*;
+import demands.DemandsQuery;
 import entities.FormEntity;
 import entities.LineEntity;
 import entities.ProductionEntity;
@@ -32,6 +33,7 @@ public class PlannerServiceImpl implements PlannerService {
     private StockService stockService;
     private DemandDao demandDao;
     private ProductionOutputsQuery productionOutputsQuery;
+    private DemandsQuery demandsQuery;
 
     private NotificationsService notificationService;
     private JiraService jiraService;
@@ -245,7 +247,7 @@ public class PlannerServiceImpl implements PlannerService {
                     today, confShortagePredictionDaysAhead,
                     currentStock,
                     productionOutputsQuery.readOutputs(production.getForm().getRefNo(), today),
-                    demandDao.findFrom(today.atStartOfDay(), production.getForm().getRefNo())
+                    demandsQuery.readDemands(production.getForm().getRefNo(), today)
             );
             List<ShortageEntity> previous = shortageDao.getForProduct(production.getForm().getRefNo());
             if (!shortages.isEmpty() && !shortages.equals(previous)) {
