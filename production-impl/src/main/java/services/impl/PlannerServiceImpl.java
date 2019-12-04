@@ -11,6 +11,7 @@ import external.CurrentStock;
 import external.JiraService;
 import external.NotificationsService;
 import external.StockService;
+import production.ProductionOutputsQuery;
 import tools.ShortageFinder;
 import tools.Util;
 
@@ -30,6 +31,7 @@ public class PlannerServiceImpl implements PlannerService {
     private ShortageDao shortageDao;
     private StockService stockService;
     private DemandDao demandDao;
+    private ProductionOutputsQuery productionOutputsQuery;
 
     private NotificationsService notificationService;
     private JiraService jiraService;
@@ -242,7 +244,7 @@ public class PlannerServiceImpl implements PlannerService {
             List<ShortageEntity> shortages = ShortageFinder.findShortages(
                     today, confShortagePredictionDaysAhead,
                     currentStock,
-                    productionDao.findFromTime(production.getForm().getRefNo(), today.atStartOfDay()),
+                    productionOutputsQuery.readOutputs(production.getForm().getRefNo(), today),
                     demandDao.findFrom(today.atStartOfDay(), production.getForm().getRefNo())
             );
             List<ShortageEntity> previous = shortageDao.getForProduct(production.getForm().getRefNo());

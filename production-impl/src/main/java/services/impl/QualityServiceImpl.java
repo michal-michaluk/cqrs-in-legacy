@@ -3,13 +3,13 @@ package services.impl;
 import api.QualityService;
 import api.StorageUnit;
 import dao.DemandDao;
-import dao.ProductionDao;
 import dao.ShortageDao;
 import entities.ShortageEntity;
 import external.CurrentStock;
 import external.JiraService;
 import external.NotificationsService;
 import external.StockService;
+import production.ProductionOutputsQuery;
 import tools.ShortageFinder;
 
 import java.time.Clock;
@@ -20,9 +20,9 @@ public class QualityServiceImpl implements QualityService {
 
     //Inject all
     private ShortageDao shortageDao;
-    private ProductionDao productionDao;
     private StockService stockService;
     private DemandDao demandDao;
+    private ProductionOutputsQuery productionOutputsQuery;
 
     private NotificationsService notificationService;
     private JiraService jiraService;
@@ -69,7 +69,7 @@ public class QualityServiceImpl implements QualityService {
         List<ShortageEntity> shortages = ShortageFinder.findShortages(
                 today, confShortagePredictionDaysAhead,
                 currentStock,
-                productionDao.findFromTime(productRefNo, today.atStartOfDay()),
+                productionOutputsQuery.readOutputs(productRefNo, today),
                 demandDao.findFrom(today.atStartOfDay(), productRefNo)
         );
 
