@@ -5,6 +5,7 @@ import api.LogisticService;
 import api.StockForecastDto;
 import dao.DemandDao;
 import dao.ShortageDao;
+import demands.DemandReadModelUpdater;
 import demands.DemandsQuery;
 import entities.DemandEntity;
 import entities.ManualAdjustmentEntity;
@@ -28,6 +29,7 @@ public class LogisticServiceImpl implements LogisticService {
     private StockService stockService;
     private ProductionOutputsQuery productionOutputsQuery;
     private DemandsQuery demandsQuery;
+    private DemandReadModelUpdater readModelUpdater;
 
     private NotificationsService notificationService;
     private JiraService jiraService;
@@ -69,6 +71,7 @@ public class LogisticServiceImpl implements LogisticService {
 
         demand.getAdjustment().add(manualAdjustment);
 
+        readModelUpdater.updateReadModel(demand);
         processShortages(adjustment.getProductRefNo());
     }
 
